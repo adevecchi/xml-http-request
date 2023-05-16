@@ -1,0 +1,94 @@
+﻿
+<div class="row mt-2">
+    <section class="col-lg-12">
+        <div class="card card-dark">
+            <div class="card-header">
+                <h3 class="card-title">Conversor de Temperatura</h3>
+            </div>
+            <div class="card-body">
+                <form asp-controller="Home" asp-action="Index" method="post">
+                    <div class="form-row">
+                        <div class="form-group col-sm-12 col-md-2">
+                            <label for="Temperatura">Temperatura</label>
+                            <input type="text" id="Temperatura" class="form-control">
+                        </div>
+                        <div class="form-group col-sm-12 col-md-3">
+                            <label for="Grau">Graus</label>
+                            <select id="Grau" class="form-control">
+                                <option value="celsius" selected>Celsius (°C)</option>
+                                <option value="fahrenheit">Fahrenheit (°F)</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-sm-12 col-md-2">
+                            <button type="button" id="btn-converter" class="btn btn-dark btn-block" style="margin-top: 1.98rem;">Converter</button>
+                            <span id="tempHelp" class="form-text text-muted text-center">para Fahrenheit (°F)</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div class="alert alert-dark" role="alert" style="display:none;">
+    <h5 class="alert-heading mb-1">Resultado</h5>
+    <hr class="mt-1 mb-2">
+    <p id="resultado" class="mb-0"></p>
+</div>
+
+@section scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/5.5.2/bootbox.min.js"></script>
+    <script>
+        const endpoints = {
+            'celsius': 'celsiustofahrenheit',
+            'fahrenheit': 'fahrenheittocelsius'
+        };
+
+        var grau = '°F';
+
+        document.getElementById('Grau').addEventListener('change', evt => {
+            let value = evt.target.value,
+                tempHelp = document.getElementById('tempHelp');
+
+            if (value == 'celsius') {
+                tempHelp.textContent = 'para Fahrenheit (°F)';
+            }
+            else {
+                tempHelp.textContent = 'para Celsius (°C)';
+            }
+
+            grau = tempHelp.textContent.substr(-3, 2);
+        });
+
+        document.getElementById('btn-converter').addEventListener('click', evt => {
+            let convert = document.getElementById('Grau').value;
+            let temperature = document.getElementById('Temperatura').value;
+
+            document.querySelector('.card-body').insertAdjacentHTML(
+                'afterend',
+                `<div class="overlay dark">
+                    <i class= "fas fa-2x fa-sync-alt fa-spin"></i>
+                </div>`
+            );
+            
+            fetch(urlApi + `/${endpoints[convert]}/${temperature}`)
+                .then(response => {
+                    return response.json();
+                })
+                .then(data => {
+                    document.querySelector('.overlay').remove();
+
+                    if (data.status == 'success') {
+                        document.getElementById('resultado').textContent = data.temperature.toLocaleString() + ' ' + grau;
+                        document.querySelector('.alert').style.display = 'block';
+                    }
+                    else {
+                        bootbox.alert({
+                            title: 'Conversor de Temperatura',
+                            message: data.message
+                        });
+                    }
+                });
+        });
+    </script>
+}
